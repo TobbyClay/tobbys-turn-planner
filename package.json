@@ -1,0 +1,46 @@
+{
+    "name": "tobbys-turn-planner",
+    "version": "0.1.0",
+    "description": "Private tactical turn planning for Foundry VTT.",
+    "type": "module",
+    "main": "index.js",
+    "scripts": {
+        "lint": "eslint . --ext .ts,.js",
+        "type-check": "tsc --noEmit",
+        "update-readme": "node scripts/update-readme.js",
+        "dev": "vite dev",
+        "watch": "vite build --watch",
+        "build": "npm run type-check && vite build && node scripts/sync-root-module.js",
+        "build:rc": "npm run type-check && vite build && node scripts/sync-root-module.js",
+        "postbuild:rc": "dotenv -e .env -- sh -c 'rsync -avz --delete tobbys-turn-planner/ \"$DEPLOY_HOST_ALIAS:$DEPLOY_PATH\"'"
+    },
+    "keywords": [],
+    "author": "Tobby",
+    "license": "MIT",
+    "devDependencies": {
+        "autoprefixer": "^10.4.21",
+        "dotenv-cli": "^8.0.0",
+        "eslint": "^9.25.0",
+        "fast-glob": "^3.3.3",
+        "fvtt-types": "github:League-of-Foundry-Developers/foundry-vtt-types#main",
+        "postcss": "^8.5.3",
+        "tsx": "^4.19.4",
+        "typescript": "^5.8.3",
+        "typescript-eslint": "^8.30.1",
+        "vite": "^6.3.5",
+        "vite-plugin-static-copy": "^2.3.1",
+        "vitest": "^3.1.2"
+    },
+    "pnpm": {
+        "ignoredBuiltDependencies": [
+            "esbuild"
+        ],
+        "onlyBuiltDependencies": [
+            "esbuild"
+        ]
+    },
+    "dependencies": {
+        "gsap": "^3.12.7",
+        "symlink-dir": "^6.0.5"
+    }
+}

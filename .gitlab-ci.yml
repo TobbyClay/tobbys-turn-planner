@@ -1,0 +1,178 @@
+stages:
+    - build
+    - upload
+    - release
+    - deploy
+    - pages
+    - foundry
+
+variables:
+    PACKAGE_NAME: "aeris-tokens"
+    PACKAGE_VERSION: "$CI_COMMIT_TAG"
+    DIST_PATH: "dist"
+    MODULE_JSON_PATH: "$DIST_PATH/module.json"
+    PACKAGE_REGISTRY_URL: "${CI_API_V4_URL}/projects/${CI_PROJECT_ID}/packages/generic/${PACKAGE_NAME}/${PACKAGE_VERSION}"
+    DIST_ZIP: "${PACKAGE_NAME}-${PACKAGE_VERSION}.zip"
+
+build:
+    stage: build
+    image: node:20
+    rules:
+        - if: $CI_COMMIT_TAG
+    cache:
+        key: ${CI_COMMIT_REF_SLUG}
+        paths:
+            - node_modules/
+    script:
+        - echo "Installing dependencies..."
+        - npm install
+        - echo "Installing zip utility..."
+        - apt-get update && apt-get install -y zip
+        - echo "Building the application..."
+        - npm run ci
+        - echo "Replacing VERSION_TAG in module.json with $CI_COMMIT_TAG..."
+        - sed -i 's/VERSION_TAG/'"$CI_COMMIT_TAG"'/g' $MODULE_JSON_PATH
+        - echo "Replacing PROJECT_ID with $CI_PROJECT_ID..."
+        - sed -i "s/PROJECT_ID/${CI_PROJECT_ID}/g" $MODULE_JSON_PATH
+        - cat $MODULE_JSON_PATH
+        - echo "Zipping the dist folder..."
+        - cd ${DIST_PATH} && zip -r "../${DIST_ZIP}" . && cd ..
+    artifacts:
+        paths:
+            - "${DIST_ZIP}"
+
+upload:
+    stage: upload
+    image: curlimages/curl:latest
+    rules:
+        - if: $CI_COMMIT_TAG
+    script:
+        - |
+            echo "Uploading ${DIST_ZIP} to the Generic Package Registry..."
+            curl --header "JOB-TOKEN: ${CI_JOB_TOKEN}" \
+                 --upload-file ${DIST_ZIP} \
+                 "${PACKAGE_REGISTRY_URL}/${DIST_ZIP}"
+
+release:
+    stage: release
+    image: registry.gitlab.com/gitlab-org/release-cli:latest
+    rules:
+        - if: $CI_COMMIT_TAG
+    script:
+        - |
+            echo "Extracting notes for $CI_COMMIT_TAG from CHANGELOG.md..."
+            NOTES=$(awk -v tag="## ${CI_COMMIT_TAG}" '
+              $0 == tag {flag=1; next}
+              /^## / && flag {exit}
+              flag {print}
+            ' CHANGELOG.md)
+
+            if [ -z "$NOTES" ]; then
+              echo "ERROR: No changelog entry found for $CI_COMMIT_TAG in CHANGELOG.md"
+              exit 1
+            fi
+
+            echo "Creating GitLab release..."
+            release-cli create \
+              --name "Release $CI_COMMIT_TAG" \
+              --tag-name $CI_COMMIT_TAG \
+              --description "$NOTES" \
+              --assets-link "{\"name\":\"${DIST_ZIP}\",\"url\":\"${PACKAGE_REGISTRY_URL}/${DIST_ZIP}\"}"
+
+deploy:
+    stage: deploy
+    image: node:20
+    dependencies:
+        - build
+    rules:
+        - if: $CI_COMMIT_TAG
+    script:
+        - echo "Creating public directories..."
+
+        - mkdir -p public/v12 public/v13
+        - |
+            if [[ "$CI_COMMIT_TAG" =~ ^v13\. ]]; then
+                echo "Fetching v12 manifest to preserve..."
+                curl -sfL "https://aeris-fvtt.gitlab.io/aeris-tokens/v12/module.json" -o public/v12/module.json || true
+            else
+                echo "Fetching v13 manifest to preserve..."
+                curl -sfL "https://aeris-fvtt.gitlab.io/aeris-tokens/v13/module.json" -o public/v13/module.json || true
+            fi
+
+        - echo "Installing unzip utility..."
+        - apt-get update && apt-get install -y unzip
+
+        - echo "Unzipping dist and extracting module.json..."
+        - unzip "${DIST_ZIP}" -d extracted
+
+        - |
+            if [[ "$CI_COMMIT_TAG" =~ ^v13\. ]]; then
+                echo "Publishing new v13 manifest..."
+                cp "extracted/module.json" public/v13/
+            else
+                echo "Publishing new v12 manifest..."
+                cp "extracted/module.json" public/v12
+            fi
+        - echo "Contents of public/ directory:"
+        - ls -Rla public/
+    artifacts:
+        paths:
+            - public/
+        expire_in: 1 week
+
+pages:
+    stage: pages
+    dependencies:
+        - deploy
+    script:
+        - echo "Checking the current working directory contents..."
+        - ls -la
+        - echo "Checking contents of public directory before publishing..."
+        - ls -la public/
+        - echo "Publishing Pages..."
+    artifacts:
+        paths:
+            - public/
+    rules:
+        - if: $CI_COMMIT_TAG
+
+foundry-release:
+    stage: foundry
+    image: alpine:latest
+    needs:
+        - pages
+    rules:
+        - if: $CI_COMMIT_TAG
+    before_script:
+        - apk add --no-cache curl jq bash
+    script:
+        - |
+            #!/bin/bash
+            set -e
+
+            # Pick the correct manifest
+            if [[ "$CI_COMMIT_TAG" =~ ^v13\. ]]; then
+              MANIFEST_URL="https://${CI_PROJECT_NAMESPACE}.gitlab.io/${CI_PROJECT_NAME}/v13/module.json"
+            else
+              MANIFEST_URL="https://${CI_PROJECT_NAMESPACE}.gitlab.io/${CI_PROJECT_NAME}/v12/module.json"
+            fi
+
+            echo "Fetching release notes from GitLab Release..."
+            NOTES="${CI_PROJECT_URL}/-/releases/${CI_COMMIT_TAG}"
+
+            COMPATIBILITY=$(curl -sL "$MANIFEST_URL" | jq '.compatibility')
+
+            echo "Publishing release to Foundry API with manifest $MANIFEST_URL..."
+            curl -X POST https://foundryvtt.com/_api/packages/release_version/ \
+              -H "Content-Type: application/json" \
+              -H "Authorization: $(echo "$FOUNDRY_API_TOKEN_B64" | base64 -d)" \
+              -d "{
+                \"id\": \"${PACKAGE_NAME}\",
+                \"dry-run\": false,
+                \"release\": {
+                  \"version\": \"${CI_COMMIT_TAG#v}\",
+                  \"manifest\": \"${MANIFEST_URL}\",
+                  \"notes\": $(echo "$NOTES" | jq -Rs .),
+                  \"compatibility\": $COMPATIBILITY
+                }
+              }"

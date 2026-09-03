@@ -1,0 +1,53 @@
+{
+    "id": "tobbys-turn-planner",
+    "title": "Tobby's Turn Planner",
+    "description": "Private turn planning with tactical movement, templates, cover, and average damage previews.",
+    "esmodules": ["main.bundle.js"],
+    "styles": ["styles/turn-planner.css"],
+    "compatibility": {
+        "minimum": "14",
+        "verified": "14"
+    },
+    "version": "0.1.0",
+    "authors": [
+        {
+            "name": "Tobby"
+        },
+        {
+            "name": "Robin Chand",
+            "discord": "robxnlifts",
+            "flags": {
+                "credit": "Aeris Tokens movement technology, MIT licensed"
+            }
+        },
+        {
+            "name": "Peterlankton",
+            "url": "https://github.com/Kapuzenjoe",
+            "flags": {
+                "credit": "Simple Cover 5e cover rules reference, MIT licensed"
+            }
+        }
+    ],
+    "relationships": {
+        "requires": [
+            {
+                "id": "socketlib",
+                "type": "module",
+                "compatibility": {}
+            },
+            {
+                "id": "lib-wrapper",
+                "type": "module",
+                "compatibility": {}
+            },
+            {
+                "id": "color-picker",
+                "type": "module",
+                "compatibility": {
+                    "minimum": "1.5"
+                }
+            }
+        ]
+    },
+    "socket": true
+}

@@ -1,0 +1,42 @@
+{
+    "id": "tobbys-turn-planner",
+    "title": "Tobby's Turn Planner (Dev)",
+    "description": "Private turn planning with tactical movement, templates, cover, and average damage previews.",
+    "version": "0.1.0-dev",
+    "esmodules": ["http://localhost:30001/modules/tobbys-turn-planner/src/index.js"],
+    "styles": ["styles/turn-planner.css"],
+    "compatibility": {
+        "minimum": "14",
+        "verified": "14"
+    },
+    "authors": [
+        {
+            "name": "Tobby",
+            "flags": {}
+        }
+    ],
+    "relationships": {
+        "requires": [
+            {
+                "id": "socketlib",
+                "type": "module",
+                "compatibility": {}
+            },
+            {
+                "id": "lib-wrapper",
+                "type": "module",
+                "compatibility": {}
+            },
+            {
+                "id": "color-picker",
+                "type": "module",
+                "compatibility": {
+                    "minimum": "1.5"
+                }
+            }
+        ]
+    },
+    "manifest": "",
+    "socket": true,
+    "flags": {}
+}

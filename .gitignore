@@ -1,0 +1,12 @@
+node_modules
+pnpm-lock.yaml
+testing
+.env
+package-lock.json
+/src/.vscode
+main.bundle.js
+assets/*.js
+
+# Local and deployed copies are not part of the source repository.
+/.claude/
+/tobbys-turn-planner/

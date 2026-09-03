@@ -1,0 +1,85 @@
+{
+    "groups": [
+        {
+            "label": "Getting Started",
+            "children": [
+                {
+                    "title": "Tobby's Turn Planner",
+                    "file": "getting-started/intro.md"
+                },
+                {
+                    "title": "Features",
+                    "file": "getting-started/features.md"
+                }
+            ]
+        },
+        {
+            "label": "How it Works",
+            "children": [
+                {
+                    "title": "Introduction",
+                    "file": "how-it-works/intro.md"
+                },
+                {
+                    "title": "Wall Index",
+                    "file": "how-it-works/wall-index.md"
+                },
+                {
+                    "title": "Painted Tiles",
+                    "file": "how-it-works/painted-tiles.md"
+                },
+                {
+                    "title": "Animations & Sync",
+                    "file": "how-it-works/animation-sync.md"
+                }
+            ]
+        },
+        {
+            "label": "API Reference",
+            "children": [
+                {
+                    "title": "Introduction",
+                    "file": "api/intro.md"
+                },
+                {
+                    "title": "tobbys-turn-planner.getMovementModes",
+                    "file": "api/get-movement-modes.md"
+                },
+                {
+                    "title": "tobbys-turn-planner.preGetMovementValue",
+                    "file": "api/pre-get-movement-value.md"
+                },
+                {
+                    "title": "tobbys-turn-planner.resetMovement",
+                    "file": "api/reset-movement.md"
+                },
+                {
+                    "title": "tobbys-turn-planner.getGridTravelSoundOverride",
+                    "file": "api/get-grid-travel-sound-override.md"
+                },
+                {
+                    "title": "token.dragActionHandler.refreshMovement()",
+                    "file": "api/token-drag-action-handler.md"
+                }
+            ]
+        },
+        {
+            "label": "Troubleshooting",
+            "children": [
+                {
+                    "title": "Movement Path",
+                    "file": "troubleshooting/movement-path.md"
+                }
+            ]
+        },
+        {
+            "label": "Misc",
+            "children": [
+                {
+                    "title": "Custom Fonts",
+                    "file": "misc/custom-font.md"
+                }
+            ]
+        }
+    ]
+}

@@ -1,0 +1,5 @@
+<section>
+	{{#each colorSettingsData}}
+		{{formGroup this.type localize=true value=this.value name=this.key label=this.settingData.name hint=this.settingData.hint}}
+	{{/each}}
+</section>
